@@ -5,7 +5,6 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 import type { IncomingMessage, ServerResponse } from 'http';
 
-function handler(req: IncomingMessage, res: ServerResponse) { ... }
 
 const app: Express = express();
 
