@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "Debt Relief & Financial Recovery Platform"
+version = "1.0.0"
+id = "artifacts/debt-relief-app"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23016
+
+[services.development]
+run = "pnpm --filter @workspace/debt-relief-app run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/debt-relief-app", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/debt-relief-app/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23016"
+BASE_PATH = "/"

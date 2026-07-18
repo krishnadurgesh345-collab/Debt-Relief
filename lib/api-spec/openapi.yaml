@@ -3,20 +3,38 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Debt Relief & Financial Recovery Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: loans
+    description: Loan management
+  - name: analysis
+    description: Financial analysis
+  - name: settlement
+    description: Settlement predictions
+  - name: letters
+    description: AI letter generation
+  - name: history
+    description: AI interaction history
+  - name: dashboard
+    description: Dashboard summaries
+
+security:
+  - bearerAuth: []
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
+      security: []
       responses:
         "200":
           description: Healthy
@@ -24,7 +42,336 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Email taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /auth/refresh:
+    post:
+      operationId: refreshToken
+      tags: [auth]
+      summary: Refresh access token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshTokenInput"
+      responses:
+        "200":
+          description: New tokens
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokens"
+
+  /loans/summary:
+    get:
+      operationId: getLoansSummary
+      tags: [loans]
+      summary: Loan summary statistics
+      responses:
+        "200":
+          description: Loan summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoanSummary"
+
+  /loans:
+    get:
+      operationId: getLoans
+      tags: [loans]
+      summary: Get user loans
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        "200":
+          description: Paginated loans
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoanListResponse"
+
+    post:
+      operationId: createLoan
+      tags: [loans]
+      summary: Create a loan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoanInput"
+      responses:
+        "201":
+          description: Loan created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Loan"
+
+  /loans/{id}:
+    put:
+      operationId: updateLoan
+      tags: [loans]
+      summary: Update a loan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoanUpdate"
+      responses:
+        "200":
+          description: Updated loan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Loan"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      operationId: deleteLoan
+      tags: [loans]
+      summary: Delete a loan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /analysis:
+    get:
+      operationId: getAnalyses
+      tags: [analysis]
+      summary: Get analysis history
+      responses:
+        "200":
+          description: Analyses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FinancialAnalysis"
+
+    post:
+      operationId: createAnalysis
+      tags: [analysis]
+      summary: Run financial analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalysisInput"
+      responses:
+        "200":
+          description: Analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FinancialAnalysis"
+
+  /settlement:
+    post:
+      operationId: predictSettlement
+      tags: [settlement]
+      summary: Predict settlement probability
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettlementInput"
+      responses:
+        "200":
+          description: Settlement prediction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SettlementResult"
+
+  /letter:
+    post:
+      operationId: generateLetter
+      tags: [letters]
+      summary: Generate professional letter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LetterInput"
+      responses:
+        "200":
+          description: Generated letter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LetterResult"
+
+  /history:
+    get:
+      operationId: getHistory
+      tags: [history]
+      summary: Get AI interaction history
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: History
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AIHistory"
+
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Dashboard summary
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +381,508 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - name
+        - email
+        - createdAt
+        - updatedAt
+
+    AuthTokens:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+      required:
+        - accessToken
+        - refreshToken
+        - expiresIn
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        tokens:
+          $ref: "#/components/schemas/AuthTokens"
+      required:
+        - user
+        - tokens
+
+    RegisterInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+        email:
+          type: string
+        password:
+          type: string
+          minLength: 8
+        phone:
+          type: string
+      required:
+        - name
+        - email
+        - password
+
+    LoginInput:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    RefreshTokenInput:
+      type: object
+      properties:
+        refreshToken:
+          type: string
+      required:
+        - refreshToken
+
+    Loan:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        lenderName:
+          type: string
+        loanType:
+          type: string
+        loanAmount:
+          type: number
+        remainingAmount:
+          type: number
+        interestRate:
+          type: number
+        monthlyPayment:
+          type: number
+        monthsOverdue:
+          type: integer
+        status:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - userId
+        - lenderName
+        - loanType
+        - loanAmount
+        - remainingAmount
+        - interestRate
+        - monthlyPayment
+        - monthsOverdue
+        - status
+        - createdAt
+        - updatedAt
+
+    LoanInput:
+      type: object
+      properties:
+        lenderName:
+          type: string
+          minLength: 1
+        loanType:
+          type: string
+        loanAmount:
+          type: number
+          minimum: 0
+        remainingAmount:
+          type: number
+          minimum: 0
+        interestRate:
+          type: number
+          minimum: 0
+        monthlyPayment:
+          type: number
+          minimum: 0
+        monthsOverdue:
+          type: integer
+          minimum: 0
+        status:
+          type: string
+          enum: [active, settled, defaulted, negotiating]
+      required:
+        - lenderName
+        - loanType
+        - loanAmount
+        - remainingAmount
+        - interestRate
+        - monthlyPayment
+        - monthsOverdue
+        - status
+
+    LoanUpdate:
+      type: object
+      properties:
+        lenderName:
+          type: string
+        loanType:
+          type: string
+        loanAmount:
+          type: number
+        remainingAmount:
+          type: number
+        interestRate:
+          type: number
+        monthlyPayment:
+          type: number
+        monthsOverdue:
+          type: integer
+        status:
+          type: string
+          enum: [active, settled, defaulted, negotiating]
+
+    LoanListResponse:
+      type: object
+      properties:
+        loans:
+          type: array
+          items:
+            $ref: "#/components/schemas/Loan"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - loans
+        - total
+        - page
+        - limit
+        - totalPages
+
+    LoanSummary:
+      type: object
+      properties:
+        totalLoans:
+          type: integer
+        totalDebt:
+          type: number
+        totalMonthlyPayment:
+          type: number
+        activeLoans:
+          type: integer
+        settledLoans:
+          type: integer
+        defaultedLoans:
+          type: integer
+        negotiatingLoans:
+          type: integer
+        averageInterestRate:
+          type: number
+      required:
+        - totalLoans
+        - totalDebt
+        - totalMonthlyPayment
+        - activeLoans
+        - settledLoans
+        - defaultedLoans
+        - negotiatingLoans
+        - averageInterestRate
+
+    FinancialAnalysis:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        monthlyIncome:
+          type: number
+        monthlyExpenses:
+          type: number
+        monthlySavings:
+          type: number
+        financialScore:
+          type: number
+        debtRatio:
+          type: number
+        riskLevel:
+          type: string
+        recommendations:
+          type: array
+          items:
+            type: string
+        disposableIncome:
+          type: number
+        totalMonthlyDebt:
+          type: number
+        createdAt:
+          type: string
+      required:
+        - id
+        - userId
+        - monthlyIncome
+        - monthlyExpenses
+        - monthlySavings
+        - financialScore
+        - debtRatio
+        - riskLevel
+        - recommendations
+        - disposableIncome
+        - totalMonthlyDebt
+        - createdAt
+
+    AnalysisInput:
+      type: object
+      properties:
+        monthlyIncome:
+          type: number
+          minimum: 0
+        monthlyExpenses:
+          type: number
+          minimum: 0
+        monthlySavings:
+          type: number
+          minimum: 0
+        loanIds:
+          type: array
+          items:
+            type: integer
+      required:
+        - monthlyIncome
+        - monthlyExpenses
+        - monthlySavings
+
+    SettlementResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        probability:
+          type: number
+        recommendedPercentage:
+          type: number
+        estimatedPayment:
+          type: number
+        reasoning:
+          type: string
+        nextSteps:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - probability
+        - recommendedPercentage
+        - estimatedPayment
+        - reasoning
+        - nextSteps
+        - createdAt
+
+    SettlementInput:
+      type: object
+      properties:
+        outstandingAmount:
+          type: number
+          minimum: 0
+        monthlyIncome:
+          type: number
+          minimum: 0
+        creditScore:
+          type: integer
+          minimum: 300
+          maximum: 850
+        monthsOverdue:
+          type: integer
+          minimum: 0
+        disposableIncome:
+          type: number
+        loanType:
+          type: string
+      required:
+        - outstandingAmount
+        - monthlyIncome
+        - creditScore
+        - monthsOverdue
+
+    LetterResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        letter:
+          type: string
+        letterType:
+          type: string
+        lenderName:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - letter
+        - letterType
+        - lenderName
+        - createdAt
+
+    LetterInput:
+      type: object
+      properties:
+        lenderName:
+          type: string
+          minLength: 1
+        amount:
+          type: number
+          minimum: 0
+        reason:
+          type: string
+          minLength: 10
+        letterType:
+          type: string
+          enum: [settlement_request, hardship_letter, restructuring_request]
+        additionalInfo:
+          type: string
+      required:
+        - lenderName
+        - amount
+        - reason
+        - letterType
+
+    AIHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        prompt:
+          type: string
+        response:
+          type: string
+        historyType:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - userId
+        - prompt
+        - response
+        - historyType
+        - createdAt
+
+    LoansByStatus:
+      type: object
+      properties:
+        active:
+          type: integer
+        settled:
+          type: integer
+        defaulted:
+          type: integer
+        negotiating:
+          type: integer
+      required:
+        - active
+        - settled
+        - defaulted
+        - negotiating
+
+    MonthlyTrendItem:
+      type: object
+      properties:
+        month:
+          type: string
+        totalDebt:
+          type: number
+        payments:
+          type: number
+      required:
+        - month
+        - totalDebt
+        - payments
+
+    DashboardSummary:
+      type: object
+      properties:
+        totalDebt:
+          type: number
+        monthlyIncome:
+          type: ["number", "null"]
+        monthlyExpenses:
+          type: ["number", "null"]
+        financialScore:
+          type: ["number", "null"]
+        debtRatio:
+          type: ["number", "null"]
+        settlementProbability:
+          type: ["number", "null"]
+        loanCount:
+          type: integer
+        totalMonthlyPayment:
+          type: number
+        recentLoans:
+          type: array
+          items:
+            $ref: "#/components/schemas/Loan"
+        recentAnalyses:
+          type: array
+          items:
+            $ref: "#/components/schemas/FinancialAnalysis"
+        loansByStatus:
+          $ref: "#/components/schemas/LoansByStatus"
+        monthlyTrend:
+          type: array
+          items:
+            $ref: "#/components/schemas/MonthlyTrendItem"
+      required:
+        - totalDebt
+        - loanCount
+        - totalMonthlyPayment
+        - recentLoans
+        - recentAnalyses
+        - loansByStatus
+        - monthlyTrend
