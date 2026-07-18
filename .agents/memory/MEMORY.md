@@ -1,0 +1,3 @@
+- [Express req.user augmentation](express-req-user-augmentation.md) — correct pattern is `export {}` + `declare global { namespace Express { interface Request {...} } }`
+- [Orval Zod v4 compat](orval-zod-compat.md) — Orval v8 generates z.email() (Zod v4 syntax) for format:email fields; remove format:email from OpenAPI spec to stay on Zod v3
+- [api-client-react exports](api-client-react-exports.md) — setAuthTokenGetter/setBaseUrl are exported from main "@workspace/api-client-react" index; never import from /src/custom-fetch subpath
